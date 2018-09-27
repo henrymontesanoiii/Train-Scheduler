@@ -28,8 +28,26 @@ $("#train-form").on("submit", function (event) {
   var firstTrainInput = $("#first-train").val().trim();
   var frequencyInput = $("#frequency").val().trim();
 
-  //convert firstTrain date to unix
-  // var firstTrainConverted = moment(firstTrainInput, "MM/DD/YYYY").format("X");
+  var firstTrainConverted = moment(firstTrainInput, "HH:mm").subtract(1, "years");
+    console.log(firstTrainConverted);
+
+  var currentTime = moment();
+    console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+
+    var diffTime = moment().diff(moment(firstTrainConverted), "minutes");
+    console.log("DIFFERENCE IN TIME: " + diffTime);
+
+    var remainder = diffTime % frequencyInput;
+    console.log(remainder);
+
+
+    // Minute Until Train
+    var minutesAwayInput = frequencyInput - remainder;
+    console.log("MINUTES TILL TRAIN: " + minutesAwayInput);
+
+    // Next Train
+    var nextTrainInput = moment().add(minutesAwayInput, "minutes");
+    console.log("ARRIVAL TIME: " + moment(nextTrainInput).format("hh:mm"));
 
   if (!trainInput || !destinationInput || !firstTrainInput || !frequencyInput){
     return false;
@@ -38,14 +56,16 @@ $("#train-form").on("submit", function (event) {
   // Console log each of the user inputs to confirm we are receiving them
   console.log(trainInput);
   console.log(destinationInput);
-  console.log(firstTrainInput);//firstTrainConverted
+  console.log(firstTrainInput);
   console.log(frequencyInput);
 
   database.ref("train").push({
     train: trainInput,
     destination: destinationInput,
-    firstTrain: firstTrainInput,//firstTrainConverted
-    frequency: frequencyInput
+    frequency: frequencyInput,
+    minutesAway: minutesAwayInput,
+    nextTrain: moment(nextTrainInput).format("hh:mm"),
+    
   })});
 
   database.ref("train").on("child_added", function (childSnapshot) {
@@ -61,21 +81,19 @@ $("#train-form").on("submit", function (event) {
       console.log(trainDetails[key]);
       var trainInfo = trainDetails.train;
       var destinationInfo = trainDetails.destination;
-      var firstTrainInfo = trainDetails.firstTrain;
       var frequencyInfo = trainDetails.frequency;
+      var nextTrainInfo= trainDetails.nextTrain;
+      var minutesAwayInfo = trainDetails.minutesAway;
     };
-    // var firstTrain = moment.unix(firstTrainInfo).format("MM/DD/YYYY");
-    // console.log('firstTrain Date: ' + firstTrain)
-    // var monthsWorked = moment().diff(moment(firstTrain, "X"), "months");
-    // var totalBilled = monthsWorked * frequencyInfo;
+   
 
 
       var rowInfo = $("<tr>").append(
         $("<td>").text(trainInfo),
         $("<td>").text(destinationInfo),
         $("<td>").text(frequencyInfo),
-        $("<td>").text("Next Arrival"),
-        $("<td>").text("Minutes Away"),
+        $("<td>").text(nextTrainInfo),
+        $("<td>").text(minutesAwayInfo),
       );
       $("#train-table").append(rowInfo);
     
